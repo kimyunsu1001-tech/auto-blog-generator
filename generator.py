@@ -103,7 +103,7 @@ def main() -> int:
         sys.exit("GEMINI_API_KEY가 없습니다. .env 파일 또는 GitHub Secrets를 확인하세요.")
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(os.getenv("GEMINI_MODEL", "gemini-2.0-flash"))
+    model = genai.GenerativeModel(os.getenv("GEMINI_MODEL", "gemini-3.8-flash"))
 
     POSTS_DIR.mkdir(exist_ok=True)
     keywords = read_keywords()
