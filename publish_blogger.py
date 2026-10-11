@@ -80,6 +80,27 @@ def content_hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
 
+ISSUE_DIR = BASE_DIR / ".issue_bodies"
+
+
+def write_issue_body(path: Path, title: str, url: str, text: str) -> None:
+    """새 글이 올라가면 네이버·다음 블로그에 직접 올릴 때 복사하기 좋은 이슈 본문을 만든다."""
+    ISSUE_DIR.mkdir(exist_ok=True)
+    body = (
+        f"새 글이 Blogger에 게시됐어요: {url}\n\n"
+        "## 네이버·다음 블로그에 올리는 방법 (직접 붙여넣기)\n"
+        "1. 아래 **복사용 본문**을 펼쳐 내용을 드래그해서 복사합니다.\n"
+        "2. 네이버/다음 블로그 글쓰기 화면에 붙여넣고 제목을 입력합니다.\n"
+        "3. 그림이 있다면 직접 올리고, 해시태그와 카테고리를 확인한 뒤 발행합니다.\n"
+        "4. 올린 뒤 이 이슈를 닫아 주세요.\n\n"
+        "> 같은 글을 여러 곳에 그대로 올리면 검색에서 중복 문서로 취급될 수 있다는 이야기가 있어요"
+        "(확인된 정보는 아니에요). 가능하면 서론과 결론을 조금 바꿔서 올려 보세요.\n\n"
+        f"<details><summary>복사용 본문 펼치기</summary>\n\n{text}\n\n</details>\n"
+    )
+    (ISSUE_DIR / f"{path.stem}.md").write_text(body, encoding="utf-8")
+    (ISSUE_DIR / f"{path.stem}.title").write_text(f"[네이버·다음 업로드] {title}", encoding="utf-8")
+
+
 def normalize(entry) -> dict:
     """예전 형식(주소 문자열)과 새 형식({url,id,hash})을 모두 받아 dict로 통일한다."""
     if isinstance(entry, str):
@@ -151,6 +172,8 @@ def main() -> int:
                                     "hash": content_hash(text)}
             save_published(published)  # 하나 처리할 때마다 기록해 중복 게시를 막는다
             print(f"  ✓ {mode} {path.name} → {data.get('url', '')}")
+            if mode == "new":
+                write_issue_body(path, title, data.get("url", ""), body_md)
         else:
             failed += 1
             print(f"  ✗ {mode} {path.name}: {resp.status_code} {resp.text[:300]}")

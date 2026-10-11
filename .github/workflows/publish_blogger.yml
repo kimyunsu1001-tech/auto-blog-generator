@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: write # published.json 기록용
+  issues: write # 네이버·다음 업로드용 복사 안내 이슈 생성
 
 concurrency:
   group: publish-blogger # 동시 실행으로 인한 중복 게시 방지
@@ -37,6 +38,16 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
         run: python publish_blogger.py --limit 3
+      - name: 네이버·다음 업로드용 안내 이슈 만들기 (새 글만)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -d .issue_bodies ]; then
+            for body in .issue_bodies/*.md; do
+              title="$(cat "${body%.md}.title")"
+              gh issue create --title "$title" --body-file "$body" || echo "이슈 생성 실패: $title"
+            done
+          fi
       - name: 게시 기록 커밋
         run: |
           git config user.name "github-actions[bot]"
