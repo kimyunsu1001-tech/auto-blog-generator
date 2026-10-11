@@ -1,9 +1,10 @@
 name: Auto Blog Post
 
 on:
-  schedule:
-    # 매일 00:00 UTC = 한국시간(KST) 오전 9시. 시간을 바꾸려면 README의 설명 참고.
-    - cron: "0 0 * * *"
+  # 자동 실행(cron)은 꺼 두었습니다. 매일 글은 Claude 루틴이 작성합니다.
+  # Gemini 무료 생성기를 다시 자동으로 돌리려면 아래 주석을 풀고 schedule을 추가하세요:
+  #   schedule:
+  #     - cron: "0 0 * * *"   # 매일 00:00 UTC = 한국시간 오전 9시
   workflow_dispatch: # Actions 탭에서 수동 실행 버튼 사용 가능
 
 permissions:

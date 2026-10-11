@@ -71,3 +71,49 @@ python generator.py --limit 0    # 남은 키워드 전부
 
 ## ⚠️ 사용 팁
 생성된 글은 **초안**입니다. 사실관계를 확인하고 본인 경험을 더해 발행하세요. API 키는 절대 코드나 `.env.example`에 직접 적지 마세요.
+
+---
+
+# 📣 Blogger 자동 게시 설정 (구글 블로그)
+
+`posts/`에 새 글이 push되면 `.github/workflows/publish_blogger.yml`이 `publish_blogger.py`를 실행해 Blogger에 자동으로 올립니다. 올린 글은 `published.json`에 기록되어 중복 게시되지 않습니다. (매일 09:30 KST에도 한 번 확인합니다.)
+
+## 주제는 매주 바뀝니다
+`weekly_theme.txt`에 이번 주 테마가 적혀 있고, 매주 월요일에 새 테마로 바뀝니다. 그 주의 글은 모두 그 테마 안에서 서로 겹치지 않는 키워드로 작성됩니다.
+
+## 1단계. Blogger 블로그 만들기
+1. <https://www.blogger.com> 에서 블로그를 만듭니다.
+2. 블로그 ID 확인: 블로그 관리 화면 주소 `blogger.com/blog/posts/숫자` 의 **숫자**가 Blog ID입니다.
+
+## 2단계. 구글 API 인증 정보 만들기 (한 번만)
+1. <https://console.cloud.google.com> → 새 프로젝트 생성
+2. **API 및 서비스 → 라이브러리**에서 **Blogger API v3**를 검색해 **사용**
+3. **OAuth 동의 화면** 설정: 사용자 유형 **외부**, 앱 이름과 본인 이메일만 입력
+4. ⚠️ **게시 상태를 반드시 "프로덕션으로 푸시"** 하세요. "테스트" 상태에서는 리프레시 토큰이 **7일 만에 만료**되어 자동 게시가 멈춥니다. (본인만 쓰는 앱은 구글 검증 없이 프로덕션으로 둘 수 있고, 로그인 때 "확인되지 않은 앱" 경고가 뜨는 것은 정상입니다.)
+5. **사용자 인증 정보 → 사용자 인증 정보 만들기 → OAuth 클라이언트 ID** → 유형 **웹 애플리케이션**, **승인된 리디렉션 URI**에 `https://developers.google.com/oauthplayground` 추가 → **클라이언트 ID**와 **클라이언트 보안 비밀번호** 복사
+
+## 3단계. 리프레시 토큰 받기
+1. <https://developers.google.com/oauthplayground> 접속
+2. 오른쪽 위 톱니바퀴 ⚙ → **Use your own OAuth credentials** 체크 → 위에서 복사한 클라이언트 ID/보안 비밀번호 입력
+3. 왼쪽 입력칸에 `https://www.googleapis.com/auth/blogger` 입력 → **Authorize APIs** → 블로그 주인 계정으로 로그인, 허용
+4. **Exchange authorization code for tokens** 클릭 → **Refresh token** 복사
+
+## 4단계. GitHub Secrets 등록
+저장소 **Settings → Secrets and variables → Actions → New repository secret** 에서 4개를 등록합니다.
+
+| Name | 값 |
+|---|---|
+| `BLOGGER_BLOG_ID` | 1단계의 Blog ID |
+| `GOOGLE_CLIENT_ID` | 2단계의 클라이언트 ID |
+| `GOOGLE_CLIENT_SECRET` | 2단계의 보안 비밀번호 |
+| `GOOGLE_REFRESH_TOKEN` | 3단계의 Refresh token |
+
+## 5단계. 테스트
+**Actions → Publish to Blogger → Run workflow**. 성공하면 Blogger에 글이 올라가고 `published.json`에 주소가 기록됩니다. 로컬에서 대상만 확인하려면 `python publish_blogger.py --dry-run`.
+
+## 문제 해결
+- **리프레시 토큰이 7일 만에 만료될 때** (`invalid_grant`): OAuth 동의 화면이 "테스트" 상태입니다. "프로덕션"으로 바꾼 뒤 3단계로 토큰을 다시 받아 Secret을 교체하세요.
+- **403 / 권한 오류**: 로그인한 구글 계정이 그 블로그의 주인(또는 작성자)인지, Blogger API가 켜져 있는지 확인하세요.
+- **같은 글이 두 번 올라갔을 때**: Blogger 관리 화면에서 삭제하고 `published.json`에 기록이 있는지 확인하세요.
+
+> 💡 광고(애드센스)는 Blogger 관리 화면의 **수익 창출**에서 연결합니다. 승인 심사에는 글의 품질과 양이 중요하니, AI 초안은 출처와 본인 경험을 보태 다듬어 올리는 것을 권장합니다.

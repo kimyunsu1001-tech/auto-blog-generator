@@ -1,0 +1,47 @@
+name: Publish to Blogger
+
+on:
+  push:
+    branches: [main]
+    paths: ["posts/**"] # posts/ 에 새 글이 push되면 자동 실행
+  schedule:
+    # 매일 00:30 UTC = 한국시간 09:30. push 이벤트를 놓쳤을 때를 대비한 보험.
+    - cron: "30 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write # published.json 기록용
+
+concurrency:
+  group: publish-blogger # 동시 실행으로 인한 중복 게시 방지
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Blogger에 게시
+        env:
+          BLOGGER_BLOG_ID: ${{ secrets.BLOGGER_BLOG_ID }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+        run: python publish_blogger.py --limit 3
+      - name: 게시 기록 커밋
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add published.json
+          if git diff --cached --quiet; then
+            echo "변경 없음"
+          else
+            git commit -m "chore: Blogger 게시 기록 업데이트"
+            git pull --rebase origin main
+            git push
+          fi
