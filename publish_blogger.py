@@ -87,7 +87,7 @@ def write_issue_body(path: Path, title: str, url: str, text: str) -> None:
     """새 글이 올라가면 네이버·다음 블로그에 직접 올릴 때 복사하기 좋은 이슈 본문을 만든다."""
     ISSUE_DIR.mkdir(exist_ok=True)
     body = (
-        f"새 글이 Blogger에 게시됐어요: {url}\n\n"
+        f"@kimyunsu1001-tech 새 글이 Blogger에 게시됐어요: {url}\n\n"
         "## 네이버·다음 블로그에 올리는 방법 (직접 붙여넣기)\n"
         "1. 아래 **복사용 본문**을 펼쳐 내용을 드래그해서 복사합니다.\n"
         "2. 네이버/다음 블로그 글쓰기 화면에 붙여넣고 제목을 입력합니다.\n"

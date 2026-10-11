@@ -58,7 +58,7 @@ jobs:
           if [ -d .issue_bodies ]; then
             for body in .issue_bodies/*.md; do
               title="$(cat "${body%.md}.title")"
-              gh issue create --title "$title" --body-file "$body" || echo "이슈 생성 실패: $title"
+              gh issue create --title "$title" --body-file "$body" --assignee "${{ github.repository_owner }}" || echo "이슈 생성 실패: $title"
             done
           fi
       - name: 게시 기록 커밋
