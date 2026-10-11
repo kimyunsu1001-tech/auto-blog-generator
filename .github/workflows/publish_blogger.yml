@@ -62,10 +62,12 @@ jobs:
             done
           fi
       - name: 게시 기록 커밋
+        if: ${{ always() }} # 앞 단계가 실패해도 이미 올린 글의 기록은 남겨 중복 게시를 막는다
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add published.json posts images
+          git add published.json posts
+          [ -d images ] && git add images || true
           if git diff --cached --quiet; then
             echo "변경 없음"
           else
