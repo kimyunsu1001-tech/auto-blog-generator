@@ -8,6 +8,11 @@ on:
     # 매일 00:30 UTC = 한국시간 09:30. push 이벤트를 놓쳤을 때를 대비한 보험.
     - cron: "30 0 * * *"
   workflow_dispatch:
+    inputs:
+      test_issue:
+        description: "true로 실행하면 네이버·다음 안내 이슈를 시험용으로 1개 만듭니다"
+        required: false
+        default: "false"
 
 permissions:
   contents: write # published.json 기록용
@@ -38,6 +43,14 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
         run: python publish_blogger.py --limit 3
+      - name: (시험) 안내 이슈 샘플 본문 만들기
+        if: ${{ github.event.inputs.test_issue == 'true' }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import publish_blogger as pb
+          pb.write_issue_body(Path("posts/시험용.md"), "시험용 글", "https://example.com/test", "## 시험 본문\n\n이 이슈는 자동 생성 시험입니다. 확인 후 닫아도 됩니다.")
+          PY
       - name: 네이버·다음 업로드용 안내 이슈 만들기 (새 글만)
         env:
           GH_TOKEN: ${{ github.token }}
