@@ -26,6 +26,10 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: pip install -r requirements.txt
+      - name: 글에 무료 일러스트 넣기 (Pixabay, 표시가 있는 글만)
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: python fetch_images.py
       - name: Blogger에 게시
         env:
           BLOGGER_BLOG_ID: ${{ secrets.BLOGGER_BLOG_ID }}
@@ -37,11 +41,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add published.json
+          git add published.json posts images
           if git diff --cached --quiet; then
             echo "변경 없음"
           else
-            git commit -m "chore: Blogger 게시 기록 업데이트"
+            git commit -m "chore: Blogger 게시 기록과 일러스트 업데이트"
             git pull --rebase origin main
             git push
           fi
